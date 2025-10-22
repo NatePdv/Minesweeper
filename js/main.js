@@ -1,4 +1,6 @@
 'use strict'
+var WALL = '#';
+
 var gBoard = {
     minesAroundCount: 4,
     isRevealed: false,
@@ -6,7 +8,7 @@ var gBoard = {
     isMarked: false
 }
 var gLevel = {
-    SIZE: 4,
+    SIZE: 5,
     MINES: 2
 }
 var gGame = {
@@ -15,11 +17,39 @@ var gGame = {
     markedCount: 0,
     secsPassed: 0
 }
+var gField;
 function onInit() {
-
+  gGame.isOn = true;
+  gGame.countOfFood = 0;
+  gGame.score = 0;
+  gField =buildField(gLevel)
+  printMat(gBoard, '.board-container');
+  gCherryInterval = setInterval(createCherry, 15000);
+  document.querySelector('.modal').classList.toggle('hide');
+  document.querySelector('header h3 span').innerText = gGame.score;
 }
-function buildBoard() {
+function buildField(level) {
+  var SIZE = level.SIZE+2;
+  var MINES =level.MINES;
+  var board = [];
+  for (var i = 0; i < SIZE; i++) {
+    board.push([])
+    for (var j = 0; j < SIZE; j++) {
+        board[i][j]=gBoard
+        
+      if (
+        i === 0 ||
+        i === SIZE - 1 ||
+        j === 0 ||
+        j === SIZE - 1 
+      ) {
+        board[i][j] = WALL;
+      }
 
+    }
+  }
+  console.table(board)
+  return board;
 }
 function setMinesNegsCount(board) {
 
