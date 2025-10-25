@@ -1,13 +1,7 @@
 'use strict'
 const BOMB = '💣'
 const TILE = '🟨'
-var gBoard = {
-  type: TILE,
-  minesAroundCount: 4,
-  isRevealed: false,
-  isMine: false,
-  isMarked: false
-}
+var gBoard = []
 var gLevel = {
   SIZE: 4,
   MINES: 2
@@ -18,59 +12,58 @@ var gGame = {
   markedCount: 0,
   secsPassed: 0
 }
-var gField;
 function onInit() {
   gGame.isOn = true;
-  gGame.countOfFood = 0;
-  gGame.score = 0;
-  gField = buildField(gLevel)
-  renderBoard(gField);
+  gGame.revealedCount = 0,
+    gGame.markedCount = 0,
+    gGame.secsPassed = 0
+  gBoard = []
+  gBoard = buildField()
+  renderBoard(gBoard);
   document.querySelector('.modal').classList.toggle('hide');
-  document.querySelector('header h3 span').innerText = gGame.score;
+  document.querySelector('header h3 span').innerText = gGame.revealedCount;
 }
-function buildField(level) {
-  var SIZE = level.SIZE;
-  var MINES = level.MINES;
-  var board = [];
-  var randCol = [];
-  var randRow = [];
+function buildField() {
+  var SIZE = gLevel.SIZE;
+  var MINES = gLevel.MINES;
+
 
   for (var i = 0; i < SIZE; i++) {
-    board.push([])
+    gBoard.push([])
     for (var j = 0; j < SIZE; j++) {
-      board[i][j] = gBoard
+      gBoard[i][j] = {
+        type: TILE,
+        minesAroundCount: 0,
+        isRevealed: false,
+        isMine: false,
+        isMarked: false
+      }
     }
   }
   //set mine
-  console.log('board:', board)
-  for (var i = 0; i < MINES; i++) {
-    randCol[i]=(getRandomIntInclusive(0, level.SIZE))
-    randRow[i]=(getRandomIntInclusive(0, level.SIZE))
-  }
-  console.log('randCol:', randCol)
-  console.log('randRow:', randCol)
 
   for (var i = 0; i < MINES; i++) {
-    var rColIdx = randCol[i]
-    var rRowIdx = randCol[i]
-    board[rRowIdx][rColIdx].isMine=true
+    var rCollIdx = getRandomIntInclusive(0, SIZE - 1)
+    var rRowIdx = getRandomIntInclusive(0, SIZE - 1)
+    gBoard[rRowIdx][rCollIdx].isMine = true
   }
   //set mine neighbour count
   for (var i = 0; i < SIZE; i++) {
     for (var j = 0; j < SIZE; j++) {
-      setMinesNegsCount(board, i, j)
+
+      setMinesNegsCount(gBoard, i, j)
     }
   }
 
-  console.table(board)
-  return board;
+  console.table(gBoard)
+  return gBoard;
 }
 function setMinesNegsCount(board, rowIdx, colIdx) {
   var aroundCount = 0
   var negs = getNegs(board, rowIdx, colIdx)
   for (var i = 0; i < negs.length; i++) {
     if (negs[i].isMine) {
-      aroundCount = +1
+      aroundCount += 1
     }
   }
   board[rowIdx][colIdx].minesAroundCount = aroundCount
@@ -80,7 +73,7 @@ function renderBoard(board) {
 
   const elBoard = document.querySelector('.board-container')
   var strHTML = '<table>'
-
+  console.table('board:', board)
   for (var i = 0; i < board.length; i++) {
     strHTML += '<tr>\n'
     for (var j = 0; j < board[0].length; j++) {
@@ -96,32 +89,51 @@ function renderBoard(board) {
   // console.log('strHTML is:')
   // console.log(strHTML)
   strHTML += '</table>\n'
-
   elBoard.innerHTML = strHTML
+  if (checkGameOver()) {
+    document.querySelector('.modal').classList.toggle('hide');
+  }
 }
 
 
 function onCellClicked(i, j) {
-  var cell = gField[i][j]
+  var cell = gBoard[i][j]
   console.log('cell:', cell)
   cell.isRevealed = true
+
+  gGame.revealedCount += 1
   if (cell.isMine) {
     cell.type = BOMB
-  }
-  if (cell.minesAroundCount === 0) {
-    // expandReveal(gField,elCell,i,j)
-  }
-  else {
-    cell.type = cell.minesAroundCount
-  }
-  renderBoard(gField)
+    gGame.isOn = false
+    renderBoard(gBoard)
+  } else
+    if (cell.minesAroundCount === 0) {
+      cell.type = cell.minesAroundCount
+      expandReveal(gBoard, i, j)
+    }
+    else {
+      cell.type = cell.minesAroundCount
+    }
+  document.querySelector('header h3 span').innerText = gGame.revealedCount;
+
+  renderBoard(gBoard)
 }
 // function onCellMarked(elCell, i, j) {
 
 // }
-// function checkGameOver() {
+function checkGameOver() {
+  if (!gGame.isOn) return true
+}
+function expandReveal(board, i, j) {
+  var negs = getNegs(board, i, j)
+  for (var i = 0; i < negs.length; i++) {
+    if (negs[i].isRevealed === false) {
+      negs[i].isRevealed = true
+      gGame.revealedCount += 1
+      negs[i].type = negs[i].minesAroundCount
+    }
+    // if(negs[i].minesAroundCount===0){
 
-// }
-// function expandReveal(board, elCell, i, j) {
-
-// }
+    // }
+  }
+}

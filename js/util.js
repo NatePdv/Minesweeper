@@ -44,6 +44,7 @@ function getNegs(board, rowIdx, colIdx) {
             negs.push(board[i][j])
         }
     }
+    console.log('negs:', negs)
     return negs
 }
 function getClassName(location) {
